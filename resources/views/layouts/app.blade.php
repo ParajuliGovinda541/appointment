@@ -16,6 +16,7 @@
             <h2 class="text-xl font-bold mb-6">Dashboard</h2>
             <nav class="space-y-2">
                 <a href="{{ route('posts.index') }}" class="block px-3 py-2 rounded hover:bg-gray-200">Posts</a>
+                <a href="{{ route('visitors.index') }}" class="block px-3 py-2 rounded hover:bg-gray-200">Visitors</a>
             </nav>
         </div>
 

@@ -16,7 +16,8 @@
             <p class="text-gray-600 mb-6">Manage your appointments easily and efficiently.</p>
 
             <div class="space-x-4">
-                <a href="/dashboard" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                <a href="{{ route('dashboard') }}"
+                    class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">
                     Dive Inside System
                 </a>
             </div>

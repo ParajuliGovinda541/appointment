@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('visitor_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('status')->default('Active');
-            $table->dastringte('date');
+            $table->string('date');
             $table->string('start_time');
             $table->string('end_time');
             $table->timestamp('added_on')->useCurrent();

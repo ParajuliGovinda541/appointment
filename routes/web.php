@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Web\Appointment\AppointmentController;
 use App\Http\Controllers\Web\Officer\OfficerController;
 use App\Http\Controllers\Web\Post\PostController;
 use App\Http\Controllers\Web\Visitor\VisitiorController;
@@ -55,4 +56,14 @@ Route::prefix('workdays')->name('workdays.')->group(function () {
     Route::get('/{workday}/edit', [WorkDayController::class, 'edit'])->name('edit');
     Route::put('/{workday}', [WorkDayController::class, 'update'])->name('update');
     Route::delete('/{workday}', [WorkDayController::class, 'destroy'])->name('destroy');
+});
+
+Route::prefix('appointments')->name('appointments.')->group(function () {
+    Route::get('/', [AppointmentController::class, 'index'])->name('index');
+    Route::get('/create', [AppointmentController::class, 'create'])->name('create');
+    Route::post('/', [AppointmentController::class, 'store'])->name('store');
+    Route::get('/{appointment}/edit', [AppointmentController::class, 'edit'])->name('edit');
+    Route::put('/{appointment}', [AppointmentController::class, 'update'])->name('update');
+
+    Route::post('/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('cancel');
 });

@@ -62,7 +62,7 @@
                                     </button>
                                 </form>
                             @else
-                                <form action="{{ route('officers.activate', $officer->id) }}" method="officers">
+                                <form action="{{ route('officers.activate', $officer->id) }}" method="POST">
                                     @csrf
                                     @method('PUT')
                                     <button type="submit"

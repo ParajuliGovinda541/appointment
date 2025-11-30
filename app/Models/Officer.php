@@ -18,4 +18,9 @@ class Officer extends Model
     {
         return $this->belongsTo(Post::class);
     }
+
+    public function workDays()
+    {
+        return $this->hasMany(WorkDay::class);
+    }
 }

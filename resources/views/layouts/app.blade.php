@@ -17,7 +17,9 @@
             <nav class="space-y-2">
                 <a href="{{ route('posts.index') }}" class="block px-3 py-2 rounded hover:bg-gray-200">Posts</a>
                 <a href="{{ route('visitors.index') }}" class="block px-3 py-2 rounded hover:bg-gray-200">Visitors</a>
-                <a href="{{ route('officers.index') }}" class="block px-3 py-2 rounded hover:bg-gray-200">Visitors</a>
+                <a href="{{ route('officers.index') }}" class="block px-3 py-2 rounded hover:bg-gray-200">Officers</a>
+                <a href="{{ route('workdays.index') }}" class="block px-3 py-2 rounded hover:bg-gray-200">Workdays</a>
+
 
             </nav>
         </div>

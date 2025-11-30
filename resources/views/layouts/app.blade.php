@@ -13,7 +13,7 @@
     <div class="flex min-h-screen">
         <!-- Sidebar -->
         <div class="w-64 bg-white shadow-md p-6">
-            <h2 class="text-xl font-bold mb-6">Dashboard</h2>
+            <a href="{{ route('dashboard') }}" class="text-xl font-bold mb-10">Dashboard</a>
             <nav class="space-y-2">
                 <a href="{{ route('posts.index') }}" class="block px-3 py-2 rounded hover:bg-gray-200">Posts</a>
                 <a href="{{ route('visitors.index') }}" class="block px-3 py-2 rounded hover:bg-gray-200">Visitors</a>

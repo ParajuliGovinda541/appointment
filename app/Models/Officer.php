@@ -13,4 +13,9 @@ class Officer extends Model
         'work_start_time',
         'work_end_time',
     ];
+
+    public function post()
+    {
+        return $this->belongsTo(Post::class);
+    }
 }

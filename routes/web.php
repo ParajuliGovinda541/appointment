@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Web\Officer\OfficerController;
 use App\Http\Controllers\Web\Post\PostController;
 use App\Http\Controllers\Web\Visitor\VisitiorController;
 use Illuminate\Support\Facades\Route;
@@ -19,3 +20,7 @@ Route::put('/{id}/deactivate', [PostController::class, 'deactivate'])->name('pos
 Route::resource('visitors', VisitiorController::class);
 Route::put('/{id}/activate', [VisitiorController::class, 'activate'])->name('visitors.activate');
 Route::put('/{id}/deactivate', [VisitiorController::class, 'deactivate'])->name('visitors.deactivate');
+
+Route::resource('officers', OfficerController::class);
+Route::post('/{officer}/activate', [OfficerController::class, 'activate'])->name('officers.activate');
+Route::post('/{officer}/deactivate', [OfficerController::class, 'deactivate'])->name('officers.deactivate');

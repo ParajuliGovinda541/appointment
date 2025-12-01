@@ -47,18 +47,11 @@ class VisitorService
 
     public function activate($id)
     {
-        $Visitor = $this->findById($id);
-        return $Visitor->update(['status' => 'Active']);
+        return Visitor::findOrFail($id)->update(['status' => 'Active']);
     }
 
     public function deactivate($id)
     {
-        $Visitor = $this->findById($id);
-
-        if ($Visitor->officers()->where('status', 'Active')->exists()) {
-            return false;
-        }
-
-        return $Visitor->update(['status' => 'Inactive']);
+        return Visitor::findOrFail($id)->update(['status' => 'Inactive']);
     }
 }

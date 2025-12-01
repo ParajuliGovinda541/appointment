@@ -93,4 +93,26 @@ class VisitiorController extends Controller
     {
         //
     }
+
+    public function activate($id)
+    {
+        $visitor = $this->visitorService->findById($id);
+        $this->visitorService->activate($id);
+
+        return redirect()->route('visitors.index')->with('success', 'Visitor activated successfully.');
+    }
+
+    public function deactivate($id)
+    {
+        $visitor = $this->visitorService->findById($id);
+
+        // If you have any condition before deactivation, add here
+        $result = $this->visitorService->deactivate($id);
+
+        if ($result === false) {
+            return redirect()->route('visitors.index')->with('error', 'Cannot deactivate visitor.');
+        }
+
+        return redirect()->route('visitors.index')->with('success', 'Visitor deactivated successfully.');
+    }
 }

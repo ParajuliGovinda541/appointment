@@ -46,11 +46,11 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap flex gap-2">
                             <a href="{{ route('officers.edit', $officer->id) }}"
-                                class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm">Edit</a>
-                            {{-- <a href="{{ route('officers.appointment', $officer->id) }}"
+                                class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm">Edit</a>
+                            <a href="{{ route('officers.appointments', $officer->id) }}"
                                 class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm">
                                 View Appointments
-                            </a> --}}
+                            </a>
 
                             @if ($officer->status == 'Active')
                                 <form action="{{ route('officers.deactivate', $officer->id) }}" method="POST">

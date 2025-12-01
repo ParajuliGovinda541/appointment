@@ -39,12 +39,10 @@ class PostService
 
 
 
-
     public function activate($id)
     {
         $post = $this->findById($id);
 
-        // Activate post
         $post->update(['status' => 'Active']);
 
         return [
@@ -57,7 +55,6 @@ class PostService
     {
         $post = $this->findById($id);
 
-        // Check if any officer under this post is active
         if ($post->officers()->where('status', 'Active')->exists()) {
             return [
                 'success' => false,

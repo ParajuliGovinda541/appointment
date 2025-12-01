@@ -96,23 +96,23 @@ class VisitiorController extends Controller
 
     public function activate($id)
     {
-        $visitor = $this->visitorService->findById($id);
-        $this->visitorService->activate($id);
+        $response = $this->visitorService->activate($id);
 
-        return redirect()->route('visitors.index')->with('success', 'Visitor activated successfully.');
+        if (!$response['success']) {
+            return back()->with('error', $response['message']);
+        }
+
+        return back()->with('success', $response['message']);
     }
 
     public function deactivate($id)
     {
-        $visitor = $this->visitorService->findById($id);
+        $response = $this->visitorService->deactivate($id);
 
-        // If you have any condition before deactivation, add here
-        $result = $this->visitorService->deactivate($id);
-
-        if ($result === false) {
-            return redirect()->route('visitors.index')->with('error', 'Cannot deactivate visitor.');
+        if (!$response['success']) {
+            return back()->with('error', $response['message']);
         }
 
-        return redirect()->route('visitors.index')->with('success', 'Visitor deactivated successfully.');
+        return back()->with('success', $response['message']);
     }
 }

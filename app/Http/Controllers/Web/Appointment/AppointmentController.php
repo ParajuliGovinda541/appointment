@@ -35,7 +35,7 @@ class AppointmentController extends Controller
     public function create()
     {
         $officers = Officer::all();
-        $visitors = Visitor::all();
+        $visitors = Visitor::where('status', 'Active')->get();
         return view('appointments.create', compact('officers', 'visitors'));
     }
 
@@ -45,6 +45,7 @@ class AppointmentController extends Controller
 
     public function store(Request $request)
     {
+
         $request->validate([
             'officer_id' => 'required|exists:officers,id',
             'visitor_id' => 'required|exists:visitors,id',

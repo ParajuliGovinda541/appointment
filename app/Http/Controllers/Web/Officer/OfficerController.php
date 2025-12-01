@@ -32,7 +32,7 @@ class OfficerController extends Controller
      */
     public function create()
     {
-        $posts = Post::all();
+        $posts = Post::where('status', 'Active')->get(['id', 'name']);
         return view('officers.create', compact('posts'));
     }
 
@@ -82,6 +82,14 @@ class OfficerController extends Controller
         //
     }
 
+    public function appointments($id)
+    {
+        $officer = $this->officerService->appointments($id);
+
+        return view('officers.appointment', compact('officer'));
+    }
+
+
 
 
     public function activate(Officer $officer)
@@ -92,7 +100,7 @@ class OfficerController extends Controller
 
     public function deactivate(Officer $officer)
     {
-        $this->officerService->deactivate($officer);
-        return back()->with('success', 'Officer Deactivated.');
+        $response = $this->officerService->deactivate($officer);
+        return back()->with($response['success'] ? 'success' : 'error', $response['message']);
     }
 }

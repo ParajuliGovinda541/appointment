@@ -22,15 +22,14 @@
                 required>
         </div>
 
-        <div class="mb-4">
-            <label for="post_id" class="block mb-2 font-medium">Post</label>
-            <select name="post_id" id="post_id" class="border border-gray-300 p-2 rounded w-full bg-white" required>
-                <option value="">Select Post</option>
-                @foreach ($posts as $post)
-                    <option value="{{ $post->id }}">{{ $post->name }}</option>
-                @endforeach
-            </select>
-        </div>
+        <label for="post_id" class="block mb-2 font-medium">Post</label>
+        <select name="post_id" id="post_id" class="border border-gray-300 p-2 rounded w-full bg-white" required>
+            <option value="">Select Post</option>
+            @foreach ($posts as $post)
+                <option value="{{ $post->id }}">{{ $post->name }}</option>
+            @endforeach
+        </select>
+
 
         <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
             Add Officer

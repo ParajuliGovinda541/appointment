@@ -44,25 +44,24 @@
                             <a href="{{ route('visitors.edit', $visitor->id) }}"
                                 class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm">Edit</a>
 
-                            @if ($visitor->status == 'Active')
-                                <form action="{{ route('visitors.deactivate', $visitor->id) }}" method="POST">
-                                    @csrf
-                                    @method('PUT')
-                                    <button type="submit"
-                                        class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">
-                                        Deactivate
-                                    </button>
-                                </form>
-                            @else
-                                <form action="{{ route('visitors.activate', $visitor->id) }}" method="visitor">
-                                    @csrf
-                                    @method('PUT')
-                                    <button type="submit"
-                                        class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm">
-                                        Activate
-                                    </button>
-                                </form>
-                            @endif
+                            <form action="{{ route('visitors.activate', $visitor->id) }}" method="POST" class="inline">
+                                @csrf
+                                @method('PUT')
+                                <button type="submit"
+                                    class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm">
+                                    Activate
+                                </button>
+                            </form>
+
+                            <form action="{{ route('visitors.deactivate', $visitor->id) }}" method="POST" class="inline">
+                                @csrf
+                                @method('PUT')
+                                <button type="submit"
+                                    class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm">
+                                    Deactivate
+                                </button>
+                            </form>
+
                         </td>
                     </tr>
                 @empty

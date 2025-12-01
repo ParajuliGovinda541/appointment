@@ -32,6 +32,11 @@ class OfficerService
         return Officer::with('post')->findOrFail($id);
     }
 
+    public function appointments($id)
+    {
+        return Officer::with('appointments')->findOrFail($id);
+    }
+
 
     public function update($officer, $data)
     {
@@ -52,6 +57,27 @@ class OfficerService
 
     public function deactivate($officer)
     {
-        return $officer->update(['status' => 'Inactive']);
+        // Deactivate officer
+        $officer->update(['status' => 'Inactive']);
+
+        // Deactivate all future active appointments related to this officer
+        $officer->appointments()
+            ->where('status', 'Active')
+            ->get()
+            ->filter(function ($appointment) {
+                return strtotime($appointment->date) >= strtotime(now()->toDateString());
+            })
+            ->each(function ($appointment) {
+                $appointment->update(['status' => 'Inactive']);
+            });
+
+
+        // Optional: If you also track activities separately
+        // $officer->activities()->where('status', 'Active')->where('date', '>=', now()->toDateString())->update(['status' => 'Inactive']);
+
+        return [
+            'success' => true,
+            'message' => 'Officer and future appointments deactivated successfully.'
+        ];
     }
 }

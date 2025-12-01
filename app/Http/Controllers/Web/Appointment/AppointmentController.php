@@ -8,6 +8,7 @@ use App\Models\Officer;
 use App\Models\Visitor;
 use App\Services\AppointmentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AppointmentController extends Controller
 {
@@ -45,7 +46,6 @@ class AppointmentController extends Controller
 
     public function store(Request $request)
     {
-
         $request->validate([
             'officer_id' => 'required|exists:officers,id',
             'visitor_id' => 'required|exists:visitors,id',
@@ -54,6 +54,9 @@ class AppointmentController extends Controller
             'start_time' => 'required',
             'end_time' => 'required',
         ]);
+
+        // Log the incoming appointment data
+        Log::info('New appointment request:', $request->all());
 
         $this->service->store($request->all());
 

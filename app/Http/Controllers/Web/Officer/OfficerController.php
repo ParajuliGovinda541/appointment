@@ -94,8 +94,8 @@ class OfficerController extends Controller
 
     public function activate(Officer $officer)
     {
-        $this->officerService->activate($officer);
-        return back()->with('success', 'Officer Activated.');
+        $response = $this->officerService->activate($officer);
+        return back()->with($response['success'] ? 'success' : 'error', $response['message']);
     }
 
     public function deactivate(Officer $officer)

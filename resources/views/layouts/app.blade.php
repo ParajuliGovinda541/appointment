@@ -21,7 +21,7 @@
                 <a href="{{ route('workdays.index') }}" class="block px-3 py-2 rounded hover:bg-gray-200">Workdays</a>
                 <a href="{{ route('appointments.index') }}"
                     class="block px-3 py-2 rounded hover:bg-gray-200">Appointments</a>
-
+                <a href="{{ route('activitys.index') }}" class="block px-3 py-2 rounded hover:bg-gray-200">Activity</a>
 
 
             </nav>

@@ -35,7 +35,7 @@
                             <a href="{{ route('posts.edit', $post->id) }}"
                                 class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm">Edit</a>
 
-                            {{-- @if ($post->status == 'Active')
+                            @if ($post->status == 'Active')
                                 <form action="{{ route('posts.deactivate', $post->id) }}" method="POST">
                                     @csrf
                                     @method('PUT')
@@ -53,7 +53,7 @@
                                         Activate
                                     </button>
                                 </form>
-                            @endif --}}
+                            @endif
                         </td>
                     </tr>
                 @empty

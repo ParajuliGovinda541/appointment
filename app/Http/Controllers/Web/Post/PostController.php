@@ -89,24 +89,27 @@ class PostController extends Controller
         //
     }
 
+
+
     public function activate($id)
     {
-        $this->postService->activate($id);
+        $response = $this->postService->activate($id);
 
-        return redirect()->route('posts.index')
-            ->with('success', 'Post activated successfully.');
+        if (!$response['success']) {
+            return back()->with('error', $response['message']);
+        }
+
+        return back()->with('success', $response['message']);
     }
 
     public function deactivate($id)
     {
-        $result = $this->postService->deactivate($id);
+        $response = $this->postService->deactivate($id);
 
-        if (!$result) {
-            return redirect()->route('posts.index')
-                ->with('error', 'Cannot deactivate post because it has active officers.');
+        if (!$response['success']) {
+            return back()->with('error', $response['message']);
         }
 
-        return redirect()->route('posts.index')
-            ->with('success', 'Post deactivated successfully.');
+        return back()->with('success', $response['message']);
     }
 }

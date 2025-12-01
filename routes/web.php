@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Web\Activity\ActivityController;
 use App\Http\Controllers\Web\Appointment\AppointmentController;
 use App\Http\Controllers\Web\Officer\OfficerController;
 use App\Http\Controllers\Web\Post\PostController;
@@ -44,8 +45,8 @@ Route::prefix('officers')->name('officers.')->group(function () {
     Route::get('/{officer}/edit', [OfficerController::class, 'edit'])->name('edit');
     Route::put('/{officer}', [OfficerController::class, 'update'])->name('update');
     Route::delete('/{officer}', [OfficerController::class, 'destroy'])->name('destroy');
-    Route::post('/{officer}/activate', [OfficerController::class, 'activate'])->name('activate');
-    Route::post('/{officer}/deactivate', [OfficerController::class, 'deactivate'])->name('deactivate');
+    Route::put('/{officer}/activate', [OfficerController::class, 'activate'])->name('activate');
+    Route::put('/{officer}/deactivate', [OfficerController::class, 'deactivate'])->name('deactivate');
     Route::get('/{officer}/appointments', [OfficerController::class, 'appointments'])->name('appointments');
 });
 
@@ -66,4 +67,14 @@ Route::prefix('appointments')->name('appointments.')->group(function () {
     Route::put('/{appointment}', [AppointmentController::class, 'update'])->name('update');
 
     Route::post('/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('cancel');
+});
+
+Route::prefix('activitys')->name('activitys.')->group(function () {
+    Route::get('/', [ActivityController::class, 'index'])->name('index');
+    Route::get('/create', [ActivityController::class, 'create'])->name('create');
+    Route::post('/store', [ActivityController::class, 'store'])->name('store');
+    Route::get('/{activity}/edit', [ActivityController::class, 'edit'])->name('edit');
+    Route::put('/{activity}/update', [ActivityController::class, 'update'])->name('update');
+    Route::put('/{activity}/activate', [ActivityController::class, 'activate'])->name('activate');
+    Route::put('/{activity}/deactivate', [ActivityController::class, 'deactivate'])->name('deactivate');
 });

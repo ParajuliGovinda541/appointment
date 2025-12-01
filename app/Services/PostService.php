@@ -43,17 +43,34 @@ class PostService
     public function activate($id)
     {
         $post = $this->findById($id);
-        return $post->update(['status' => 'Active']);
+
+        // Activate post
+        $post->update(['status' => 'Active']);
+
+        return [
+            'success' => true,
+            'message' => 'Post activated successfully.'
+        ];
     }
 
     public function deactivate($id)
     {
         $post = $this->findById($id);
 
+        // Check if any officer under this post is active
         if ($post->officers()->where('status', 'Active')->exists()) {
-            return false;
+            return [
+                'success' => false,
+                'message' => 'Cannot deactivate this post because it has active officers.'
+            ];
         }
 
-        return $post->update(['status' => 'Inactive']);
+        // Deactivate post
+        $post->update(['status' => 'Inactive']);
+
+        return [
+            'success' => true,
+            'message' => 'Post deactivated successfully.'
+        ];
     }
 }

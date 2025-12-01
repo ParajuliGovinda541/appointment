@@ -8,6 +8,10 @@ use Carbon\Carbon;
 
 class ActivityService
 {
+    public function getAll()
+    {
+        return Activity::all();
+    }
     public function create(array $data)
     {
 

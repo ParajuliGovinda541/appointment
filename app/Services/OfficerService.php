@@ -3,19 +3,20 @@
 namespace App\Services;
 
 use App\Models\Officer;
-use Illuminate\Support\Facades\DB;
 
 class OfficerService
 {
     /**
-     * Class OfficerService.
+     * Get all officers with their posts.
      */
     public function getAll()
     {
         return Officer::with('post')->latest()->get();
     }
 
-
+    /**
+     * Create a new officer.
+     */
     public function store($data)
     {
         return Officer::create([
@@ -27,17 +28,25 @@ class OfficerService
         ]);
     }
 
+    /**
+     * Get officer by ID with post.
+     */
     public function getById($id)
     {
         return Officer::with('post')->findOrFail($id);
     }
 
+    /**
+     * Get officer with appointments.
+     */
     public function appointments($id)
     {
         return Officer::with('appointments')->findOrFail($id);
     }
 
-
+    /**
+     * Update officer details.
+     */
     public function update($officer, $data)
     {
         return $officer->update([
@@ -47,36 +56,16 @@ class OfficerService
             'work_end_time'   => $data['work_end_time'],
         ]);
     }
-    // public function activate($officer)
-    // {
-    //     // Activate the officer
-    //     $officer->update(['status' => 'Active']);
 
-    //     // Reactivate future appointments only if the visitor is active
-    //     $officer->appointments()
-    //         ->where('status', 'Inactive')
-    //         ->get()
-    //         ->each(function ($appointment) {
-    //             $appointmentDateTime = strtotime($appointment->date . ' ' . $appointment->end_time);
-    //             $now = time();
-
-    //             // Only consider future appointments (end time in the future)
-    //             if ($appointmentDateTime >= $now && $appointment->visitor->status === 'Active') {
-    //                 $appointment->update(['status' => 'Active']);
-    //             }
-    //         });
-
-    //     return [
-    //         'success' => true,
-    //         'message' => 'Officer and future appointments reactivated successfully (past appointments and inactive visitors skipped).'
-    //     ];
-    // }
-
+    /**
+     * Activate officer and future appointments where visitor is active.
+     */
     public function activate($officer)
     {
         // Activate the officer
         $officer->update(['status' => 'Active']);
 
+        // Reactivate only future appointments where visitor is active
         $officer->appointments()
             ->where('status', 'Inactive')
             ->get()
@@ -84,10 +73,8 @@ class OfficerService
                 $appointmentEnd = strtotime($appointment->date . ' ' . $appointment->end_time);
                 $now = time();
 
-                if ($appointmentEnd >= $now) {
-                    if ($appointment->visitor->status === 'Active') {
-                        $appointment->update(['status' => 'Active']);
-                    }
+                if ($appointmentEnd >= $now && $appointment->visitor->status === 'Active') {
+                    $appointment->update(['status' => 'Active']);
                 }
             });
 
@@ -97,12 +84,15 @@ class OfficerService
         ];
     }
 
+    /**
+     * Deactivate officer and all future active appointments.
+     */
     public function deactivate($officer)
     {
         // Deactivate the officer
         $officer->update(['status' => 'Inactive']);
 
-        // Deactivate all future active appointments
+        // Deactivate only future active appointments
         $officer->appointments()
             ->where('status', 'Active')
             ->get()
@@ -110,7 +100,6 @@ class OfficerService
                 $appointmentDateTime = strtotime($appointment->date . ' ' . $appointment->end_time);
                 $now = time();
 
-                // Only future appointments
                 if ($appointmentDateTime >= $now) {
                     $appointment->update(['status' => 'Inactive']);
                 }

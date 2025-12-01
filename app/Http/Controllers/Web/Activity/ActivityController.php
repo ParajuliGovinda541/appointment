@@ -22,7 +22,7 @@ class ActivityController extends Controller
     // List all activities
     public function index()
     {
-        $activities = $this->service->list();
+        $activities = $this->service->getAll();
         return view('activity.index', compact('activities'));
     }
 

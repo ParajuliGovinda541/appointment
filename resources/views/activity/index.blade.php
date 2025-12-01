@@ -3,11 +3,6 @@
 @section('content')
     <h1 class="text-2xl font-bold mb-6">Activities</h1>
 
-    <div class="mb-4">
-        <a href="{{ route('activitys.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Add
-            Activity</a>
-    </div>
-
     <div class="overflow-x-auto bg-white shadow rounded">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">

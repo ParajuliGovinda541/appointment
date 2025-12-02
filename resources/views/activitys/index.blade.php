@@ -2,7 +2,10 @@
 
 @section('content')
     <h1 class="text-2xl font-bold mb-6">Activities</h1>
-
+    <a href="{{ route('activitys.create') }}" type="submit"
+        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+        Add Activity
+    </a>
     <div class="overflow-x-auto bg-white shadow rounded">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">

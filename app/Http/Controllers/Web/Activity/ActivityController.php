@@ -7,8 +7,7 @@ use App\Models\Activity;
 use App\Models\Officer;
 use App\Services\ActivityService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log; // add this at the top
-
+use Illuminate\Support\Facades\Log;
 
 class ActivityController extends Controller
 {
@@ -23,22 +22,19 @@ class ActivityController extends Controller
     public function index()
     {
         $activities = $this->service->getAll();
-        return view('activity.index', compact('activities'));
+        return view('activitys.index', compact('activities'));
     }
 
     // Show create form
     public function create()
     {
         $officers = Officer::where('status', 'Active')->get();
-        return view('activity.create', compact('officers'));
+        return view('activitys.create', compact('officers'));
     }
 
     // Store new activity
-
     public function store(Request $request)
     {
-        // dd($request);
-        // Validation
         $request->validate([
             'officer_id' => 'required|exists:officers,id',
             'type'       => 'required|in:leave,break',
@@ -50,9 +46,8 @@ class ActivityController extends Controller
 
         $data = $request->only(['officer_id', 'type', 'start_date', 'start_time', 'end_date', 'end_time']);
 
-        $activity = $this->service->create($data);
+        $activity = $this->service->store($data);
 
-        // Log the creation
         Log::info('Activity created', [
             'activity_id' => $activity->id,
             'officer_id'  => $activity->officer_id,
@@ -62,24 +57,21 @@ class ActivityController extends Controller
             'end_date'    => $activity->end_date,
             'end_time'    => $activity->end_time,
             'status'      => $activity->status,
-            'created_at'  => now(),
         ]);
 
         return redirect()->route('activitys.index')->with('success', 'Activity created successfully.');
     }
 
-
     // Show edit form
     public function edit(Activity $activity)
     {
         $officers = Officer::where('status', 'Active')->get();
-        return view('activity.edit', compact('activity', 'officers'));
+        return view('activitys.edit', compact('activity', 'officers'));
     }
 
     // Update activity
     public function update(Request $request, Activity $activity)
     {
-        // Validation
         $request->validate([
             'officer_id' => 'required|exists:officers,id',
             'type'       => 'required|in:leave,break',
@@ -89,9 +81,12 @@ class ActivityController extends Controller
             'end_time'   => 'required',
         ]);
 
-        $this->service->update($activity, $request->only(['officer_id', 'type', 'start_date', 'start_time', 'end_date', 'end_time']));
+        $this->service->update(
+            $activity,
+            $request->only(['officer_id', 'type', 'start_date', 'start_time', 'end_date', 'end_time'])
+        );
 
-        return redirect()->route('activity.index')->with('success', 'Activity updated successfully.');
+        return redirect()->route('activitys.index')->with('success', 'Activity updated successfully.');
     }
 
     // Activate activity

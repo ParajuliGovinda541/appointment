@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web\Officer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Officer;
+use App\Models\Post;
 use App\Services\OfficerService;
 use Illuminate\Http\Request;
 
@@ -30,7 +31,9 @@ class OfficerController extends Controller
      */
     public function create()
     {
-        return view('officers.create');
+
+        $posts = Post::where('status', 'Active')->get();
+        return view('officers.create', compact('posts'));
     }
 
     /**

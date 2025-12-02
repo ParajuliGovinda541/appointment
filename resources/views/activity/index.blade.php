@@ -27,18 +27,38 @@
                         <td class="px-6 py-4 whitespace-nowrap">{{ $activity->start_date }} {{ $activity->start_time }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{ $activity->end_date }} {{ $activity->end_time }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if ($activity->status === 'Active')
-                                <span
-                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    Active
-                                </span>
+                            @php
+                                $currentDateTime = now();
+                                $endDateTime = \Carbon\Carbon::parse($activity->end_date . ' ' . $activity->end_time);
+                            @endphp
+
+                            @if ($endDateTime->lt($currentDateTime))
+                                @if ($activity->status === 'Active')
+                                    <span
+                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        Completed
+                                    </span>
+                                @else
+                                    <span
+                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Cancelled
+                                    </span>
+                                @endif
                             @else
-                                <span
-                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                    Cancelled
-                                </span>
+                                @if ($activity->status === 'Active')
+                                    <span
+                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Active
+                                    </span>
+                                @else
+                                    <span
+                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Cancelled
+                                    </span>
+                                @endif
                             @endif
                         </td>
+
                         <td class="px-6 py-4 whitespace-nowrap flex space-x-2">
                             <a href="{{ route('activitys.edit', $activity->id) }}"
                                 class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">Edit</a>

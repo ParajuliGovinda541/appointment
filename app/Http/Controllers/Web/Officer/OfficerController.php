@@ -1,106 +1,173 @@
 <?php
 
-namespace App\Http\Controllers\Web\Officer;
+namespace App\Services;
 
-use App\Http\Controllers\Controller;
 use App\Models\Officer;
-use App\Models\Post;
-use App\Services\OfficerService;
-use Illuminate\Http\Request;
+use App\Models\Activity;
+use App\Models\WorkDay;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
-class OfficerController extends Controller
+class OfficerService
 {
-    protected $officerService;
-
-    public function __construct(OfficerService $officerService)
+    /**
+     * Get all officers with their posts.
+     */
+    public function getAll()
     {
-        $this->officerService = $officerService;
+        return Officer::with('post')->latest()->get();
     }
 
     /**
-     * Display a listing of the resource.
+     * Create a new officer with workdays.
      */
-    public function index()
+    public function store($data)
     {
-        $officers = $this->officerService->getAll();
-        return view('officers.index', compact('officers'));
-    }
+        return DB::transaction(function () use ($data) {
+            $officer = Officer::create([
+                'name'            => $data['name'],
+                'post_id'         => $data['post_id'],
+                'work_start_time' => $data['work_start_time'],
+                'work_end_time'   => $data['work_end_time'],
+                'status'          => $data['status'] ?? 'Active',
+            ]);
 
+            // Add work days if provided
+            if (!empty($data['work_days'])) {
+                foreach ($data['work_days'] as $day) {
+                    WorkDay::create([
+                        'officer_id' => $officer->id,
+                        'day_of_week' => $day
+                    ]);
+                }
+            }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $posts = Post::where('status', 'Active')->get(['id', 'name']);
-        return view('officers.create', compact('posts'));
-    }
-
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $this->officerService->store($request->all());
-        return redirect()->route('officers.index')->with('success', 'Officer Created Successfully.');
-    }
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Officer $officer)
-    {
-        //
+            return $officer;
+        });
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Get officer by ID with post.
      */
-    public function edit(Officer $officer)
+    public function getById($id)
     {
-        $posts = Post::all();
-        return view('officers.edit', compact('posts', 'officer'));
-    }
-
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Officer $officer)
-    {
-        $this->officerService->update($officer, $request->all());
-        return redirect()->route('officers.index')->with('success', 'Officer Updated Successfully.');
+        return Officer::with('post')->findOrFail($id);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Get officer with appointments.
      */
-    public function destroy(Officer $officer)
-    {
-        //
-    }
-
     public function appointments($id)
     {
-        $officer = $this->officerService->appointments($id);
-
-        return view('officers.appointment', compact('officer'));
+        return Officer::with('appointments')->findOrFail($id);
     }
 
-
-
-
-    public function activate(Officer $officer)
+    /**
+     * Update officer details including work days and adjust future activities.
+     */
+    public function update($officer, $data)
     {
-        $response = $this->officerService->activate($officer);
-        return back()->with($response['success'] ? 'success' : 'error', $response['message']);
+        return DB::transaction(function () use ($officer, $data) {
+
+            // Update basic officer info
+            $officer->update([
+                'name'            => $data['name'],
+                'post_id'         => $data['post_id'],
+                'work_start_time' => $data['work_start_time'],
+                'work_end_time'   => $data['work_end_time'],
+            ]);
+
+            // Update work days if provided
+            if (isset($data['work_days'])) {
+                // Delete old workdays
+                $officer->workDays()->delete();
+
+                // Add new workdays
+                foreach ($data['work_days'] as $day) {
+                    WorkDay::create([
+                        'officer_id' => $officer->id,
+                        'day_of_week' => $day
+                    ]);
+                }
+
+                // Cancel future activities that fall outside new work schedule
+                $now = Carbon::now();
+
+                Activity::where('officer_id', $officer->id)
+                    ->where('status', 'Active')
+                    ->where(function ($q) use ($data) {
+                        $q->where('start_time', '<', $data['work_start_time'])
+                            ->orWhere('end_time', '>', $data['work_end_time']);
+                    })
+                    ->whereDate('start_date', '>', $now)
+                    ->update(['status' => 'Inactive']);
+
+                // Cancel activities on days not in work_days
+                $excludedDays = array_diff(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], $data['work_days']);
+                Activity::where('officer_id', $officer->id)
+                    ->where('status', 'Active')
+                    ->whereIn(DB::raw('DAYNAME(start_date)'), $excludedDays)
+                    ->whereDate('start_date', '>', $now)
+                    ->update(['status' => 'Inactive']);
+            }
+
+            return $officer;
+        });
     }
 
-    public function deactivate(Officer $officer)
+    /**
+     * Activate officer and future activities where visitor is active.
+     * Prevent activation if officer's post is inactive.
+     */
+    public function activate($officer)
     {
-        $response = $this->officerService->deactivate($officer);
-        return back()->with($response['success'] ? 'success' : 'error', $response['message']);
+        if ($officer->post->status !== 'Active') {
+            return [
+                'success' => false,
+                'message' => 'Cannot activate officer: Post is inactive.'
+            ];
+        }
+
+        $officer->update(['status' => 'Active']);
+
+        $now = Carbon::now();
+
+        // Reactivate future activities where visitor is active
+        $officer->activities()
+            ->where('status', 'Inactive')
+            ->whereDate('start_date', '>', $now)
+            ->get()
+            ->each(function ($activity) {
+                if (isset($activity->visitor) && $activity->visitor->status === 'Active') {
+                    $activity->update(['status' => 'Active']);
+                }
+            });
+
+        return [
+            'success' => true,
+            'message' => 'Officer activated. Future activities with active visitors reactivated.'
+        ];
+    }
+
+    /**
+     * Deactivate officer and all future active activities.
+     */
+    public function deactivate($officer)
+    {
+        $officer->update(['status' => 'Inactive']);
+
+        $now = Carbon::now();
+
+        // Deactivate all future active activities (appointments, leave, break)
+        $officer->activities()
+            ->where('status', 'Active')
+            ->whereDate('start_date', '>', $now)
+            ->update(['status' => 'Inactive']);
+
+        return [
+            'success' => true,
+            'message' => 'Officer and future activities deactivated successfully.'
+        ];
     }
 }

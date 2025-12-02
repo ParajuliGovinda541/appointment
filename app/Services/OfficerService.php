@@ -62,7 +62,6 @@ class OfficerService
      */
     public function activate($officer)
     {
-        // Activate the officer
         $officer->update(['status' => 'Active']);
 
         // Reactivate only future appointments where visitor is active

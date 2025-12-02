@@ -20,4 +20,9 @@ class Activity extends Model
     {
         return $this->belongsTo(Officer::class);
     }
+
+    public function appointment()
+    {
+        return $this->belongsTo(Appointment::class);
+    }
 }

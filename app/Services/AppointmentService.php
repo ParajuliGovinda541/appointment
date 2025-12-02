@@ -5,12 +5,11 @@ namespace App\Services;
 use Illuminate\Validation\ValidationException;
 use App\Models\Appointment;
 use App\Models\Officer;
+use App\Models\Visitor;
 use App\Models\Activity;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
-/**
- * Class AppointmentService.
- */
 class AppointmentService
 {
     /**
@@ -21,95 +20,142 @@ class AppointmentService
         return Appointment::with(['officer', 'visitor'])->latest()->get();
     }
 
-    /**
-     * Store a new appointment and create corresponding activity.
-     */
+
     public function store($data)
     {
-        $officer = Officer::find($data['officer_id']);
+        Log::info("Creating appointment", $data);
 
-        // Log incoming request
-        Log::info('Attempting to create appointment:', $data);
+        $officer = Officer::findOrFail($data['officer_id']);
+        $visitor = Visitor::findOrFail($data['visitor_id']);
 
-        // Officer must be active
+        $date = $data['date'];
+        $start = $data['start_time'];
+        $end = $data['end_time'];
+
+        $startDT = Carbon::parse($date . ' ' . $start);
+        $endDT   = Carbon::parse($date . ' ' . $end);
+
+
+        if ($startDT->isPast()) {
+            throw ValidationException::withMessages([
+                'date' => 'You cannot create an appointment in the past.',
+            ]);
+        }
+
+
         if ($officer->status !== 'Active') {
-            Log::warning('Cannot add appointment: Officer inactive', ['officer_id' => $data['officer_id']]);
             throw ValidationException::withMessages([
                 'officer_id' => 'Cannot add appointment: Officer is inactive.'
             ]);
         }
 
-        // Check officer's workday
-        $dayOfWeek = date('l', strtotime($data['date']));
-        $isWorkDay = $officer->workDays()->where('day_of_week', $dayOfWeek)->exists();
+
+        if ($visitor->status !== 'Active') {
+            throw ValidationException::withMessages([
+                'visitor_id' => 'Cannot add appointment: Visitor is inactive.'
+            ]);
+        }
+
+
+        $dayName = Carbon::parse($date)->format('l');
+
+        $isWorkDay = $officer->workDays()
+            ->where('day_of_week', $dayName)
+            ->exists();
+
         if (!$isWorkDay) {
-            Log::warning('Appointment date is not in officer work days', ['date' => $data['date'], 'officer_id' => $data['officer_id']]);
             throw ValidationException::withMessages([
-                'date' => 'Appointment date is not in officer’s work days.'
+                'date' => "Officer is not available on $dayName.",
             ]);
         }
 
-        // Check work time
-        $workStart = $officer->work_start_time;
-        $workEnd   = $officer->work_end_time;
-        if ($data['start_time'] < $workStart || $data['end_time'] > $workEnd) {
-            Log::warning('Appointment outside officer working hours', [
-                'start_time' => $data['start_time'],
-                'end_time' => $data['end_time'],
-                'work_start' => $workStart,
-                'work_end' => $workEnd
-            ]);
+        if ($start < $officer->work_start_time || $end > $officer->work_end_time) {
             throw ValidationException::withMessages([
-                'start_time' => "Appointment must be within officer working hours ($workStart - $workEnd)."
+                'start_time' => "Appointment must be between {$officer->work_start_time} and {$officer->work_end_time}."
             ]);
         }
 
-        // Prevent overlapping appointments
-        $overlap = Appointment::where('officer_id', $data['officer_id'])
-            ->where('date', $data['date'])
-            ->where(function ($q) use ($data) {
-                $q->whereBetween('start_time', [$data['start_time'], $data['end_time']])
-                    ->orWhereBetween('end_time', [$data['start_time'], $data['end_time']])
-                    ->orWhere(function ($q2) use ($data) {
-                        $q2->where('start_time', '<=', $data['start_time'])
-                            ->where('end_time', '>=', $data['end_time']);
+
+        $officerBusy = Activity::where('officer_id', $officer->id)
+            ->where('status', 'Active')
+            ->where(function ($q) use ($date, $start, $end) {
+                $q->where('start_date', $date)->where(function ($q2) use ($start, $end) {
+                    $q2->whereBetween('start_time', [$start, $end])
+                        ->orWhereBetween('end_time', [$start, $end])
+                        ->orWhere(function ($q3) use ($start, $end) {
+                            $q3->where('start_time', '<=', $start)
+                                ->where('end_time', '>=', $end);
+                        });
+                });
+            })
+            ->exists();
+
+        if ($officerBusy) {
+            throw ValidationException::withMessages([
+                'date' => 'Officer is busy, on leave, or on break during this time.'
+            ]);
+        }
+
+
+        $visitorBusy = Appointment::where('visitor_id', $visitor->id)
+            ->where('status', 'Active')
+            ->where('date', $date)
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('start_time', [$start, $end])
+                    ->orWhereBetween('end_time', [$start, $end])
+                    ->orWhere(function ($q2) use ($start, $end) {
+                        $q2->where('start_time', '<=', $start)
+                            ->where('end_time', '>=', $end);
                     });
             })
             ->exists();
-        if ($overlap) {
-            Log::warning('Appointment overlaps with existing one', ['officer_id' => $data['officer_id'], 'date' => $data['date']]);
+
+        if ($visitorBusy) {
             throw ValidationException::withMessages([
-                'start_time' => 'This officer already has an appointment during this time.'
+                'visitor_id' => 'Visitor already has an active appointment during this time.'
             ]);
         }
 
-        // Create appointment
+
+        $overridden = Activity::where('officer_id', $officer->id)
+            ->where('status', 'Inactive')
+            ->where('type', '!=', 'Appointment')
+            ->where('start_date', $date)
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('start_time', [$start, $end])
+                    ->orWhereBetween('end_time', [$start, $end])
+                    ->orWhere(function ($q2) use ($start, $end) {
+                        $q2->where('start_time', '<=', $start)
+                            ->where('end_time', '>=', $end);
+                    });
+            })
+            ->get();
+
+        foreach ($overridden as $activity) {
+            $activity->update(['status' => 'Cancelled']);
+        }
+
+
         $appointment = Appointment::create($data);
 
-        // Create corresponding activity
+
         Activity::create([
             'officer_id' => $officer->id,
             'type'       => 'Appointment',
-            'start_date' => $appointment->date,
-            'start_time' => $appointment->start_time,
-            'end_date'   => $appointment->date,
-            'end_time'   => $appointment->end_time,
+            'start_date' => $date,
+            'start_time' => $start,
+            'end_date'   => $date,
+            'end_time'   => $end,
             'status'     => 'Active',
         ]);
-
-        Log::info('Appointment and activity created successfully', $data);
 
         return $appointment;
     }
 
-    /**
-     * Update appointment and sync its activity.
-     */
     public function update(Appointment $appointment, $data)
     {
         $appointment->update($data);
 
-        // Sync corresponding activity
         $activity = Activity::where('officer_id', $appointment->officer_id)
             ->where('type', 'Appointment')
             ->where('start_date', $appointment->date)
@@ -122,33 +168,23 @@ class AppointmentService
                 'start_time' => $appointment->start_time,
                 'end_date'   => $appointment->date,
                 'end_time'   => $appointment->end_time,
-                'status'     => $appointment->status === 'Cancelled' ? 'Inactive' : $appointment->status,
+                'status'     => $appointment->status === 'Cancelled' ? 'Inactive' : 'Active',
             ]);
         }
-
-        Log::info('Appointment and activity updated successfully', ['appointment_id' => $appointment->id]);
 
         return $appointment;
     }
 
-    /**
-     * Cancel appointment and deactivate corresponding activity.
-     */
+
     public function cancel(Appointment $appointment)
     {
         $appointment->update(['status' => 'Cancelled']);
 
-        $activity = Activity::where('officer_id', $appointment->officer_id)
+        Activity::where('officer_id', $appointment->officer_id)
             ->where('type', 'Appointment')
             ->where('start_date', $appointment->date)
             ->where('start_time', $appointment->start_time)
-            ->first();
-
-        if ($activity) {
-            $activity->update(['status' => 'Inactive']);
-        }
-
-        Log::info('Appointment cancelled and activity marked inactive', ['appointment_id' => $appointment->id]);
+            ->update(['status' => 'Inactive']);
 
         return $appointment;
     }

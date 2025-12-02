@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web\Activity;
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
 use App\Models\Officer;
+use App\Models\Visitor;
 use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -21,9 +22,24 @@ class ActivityController extends Controller
     // List all activities
     public function index()
     {
-        $activities = $this->service->getAll();
-        return view('activitys.index', compact('activities'));
+        $filters = request()->only([
+            'type',
+            'status',
+            'officer_id',
+            'visitor_id',
+            'start_date',
+            'end_date',
+            'start_time',
+            'end_time'
+        ]);
+
+        $activities = $this->service->getFiltered($filters);
+        $officers = Officer::all();
+        $visitors = Visitor::all();
+
+        return view('activitys.index', compact('activities', 'officers', 'visitors', 'filters'));
     }
+
 
     // Show create form
     public function create()

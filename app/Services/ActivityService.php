@@ -100,4 +100,46 @@ class ActivityService
     {
         $activity->update(['status' => 'Cancelled']);
     }
+
+    public function getFiltered(array $filters = [])
+    {
+        $query = Activity::with(['officer', 'appointment.visitor']);
+
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['officer_id'])) {
+            $query->where('officer_id', $filters['officer_id']);
+        }
+
+        if (!empty($filters['visitor_id'])) {
+            $query->whereHas('appointment', function ($q) use ($filters) {
+                $q->where('visitor_id', $filters['visitor_id']);
+            });
+        }
+
+
+        if (!empty($filters['start_date'])) {
+            $query->where('start_date', '>=', $filters['start_date']);
+        }
+
+        if (!empty($filters['end_date'])) {
+            $query->where('end_date', '<=', $filters['end_date']);
+        }
+
+        if (!empty($filters['start_time'])) {
+            $query->where('start_time', '>=', $filters['start_time']);
+        }
+
+        if (!empty($filters['end_time'])) {
+            $query->where('end_time', '<=', $filters['end_time']);
+        }
+
+        return $query->latest()->get();
+    }
 }

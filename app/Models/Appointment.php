@@ -27,12 +27,4 @@ class Appointment extends Model
     {
         return $this->belongsTo(Visitor::class);
     }
-
-    public function activity()
-    {
-        return $this->hasOne(Activity::class, 'officer_id', 'officer_id')
-            ->where('type', 'Appointment')
-            ->where('start_date', $this->date)
-            ->where('start_time', $this->start_time);
-    }
 }

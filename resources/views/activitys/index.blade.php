@@ -23,6 +23,8 @@
                     <option value="">All</option>
                     <option value="Active" @if (($filters['status'] ?? '') == 'Active') selected @endif>Active</option>
                     <option value="Cancelled" @if (($filters['status'] ?? '') == 'Cancelled') selected @endif>Cancelled</option>
+                    <option value="Completed" @if (($filters['status'] ?? '') == 'Completed') selected @endif>Completed</option>
+
                 </select>
             </div>
             <div>
